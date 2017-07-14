@@ -15,6 +15,7 @@
 /* do we need them as globals? */
 static int32_t sp;
 static int32_t ip;
+static int32_t *data;
 
 /* The objective of this program is to create a small instruction processing machine
  *
@@ -43,13 +44,13 @@ void disp_bin(uint32_t number)
 	printf("\n");
 }
 
-int f(int32_t v, int32_t *data)
+void f(int32_t v)
 {
 	sp = sp - 1;
 	data[sp] = v;
 }
 
-int g(int32_t *data,)
+int32_t g()
 {
 	int32_t v = data[sp]
 	sp++;
@@ -79,37 +80,149 @@ int perform_action()
 {
 }
 
-int operations(int binop, int op)
+void pop()
+{
+	sp++;
+}
+
+void push(int32_t oper_data)
+{
+	f(oper_data);	
+}
+
+void load()
+{
+	int32_t addr = g();
+	f(data[addr]);
+}
+
+void store()
+{
+	int32_t st_data = g();
+	int32_t	addr = g();
+	data[addr] = st_data;
+}
+
+void jmp()
+{
+	int32_t cond = g();
+	int32_t addr = g();
+	if(cond)
+		ip = addr;
+}	
+
+void not()
+{
+	if(g())
+		f(1);
+	else
+		f(0);
+	
+}
+
+void putc()
+{
+	unsigned char byte;
+	byte = g() & 0xff;
+	fprintf(stdout, "%x",byte);
+}
+
+
+void getc()
+{
+	unsigned char byte;
+	int32_t x;
+	fread(byte, sizeof(byte), 1, stdin);
+	x = (int32_t)byte;
+	f(x & 0xFF);
+}
+
+void halt()
+{
+	exit EXIT_SUCCESS;
+}
+
+int32_t add(int32_t a, int32_t b)
+{
+	return a + b;
+}
+
+int operations(int binop, int op, int32_t oper_data)
 {
 	switch(binop) {
-	case 0:
-		switch(op) {
-		case 0x0:
-		case 0x1:
-		case 0x2:
-		case 0x3:
-		case 0x4:
-		case 0x5:
-		case 0x6:
-		case 0x7:
-		case 0x8:
-		case 0x9:
-		case 0xa:
-		break;
-		}
-	case 1:
-		switch(op) {
-		case 0x0:
-		case 0x1:
-		case 0x2:
-		case 0x3:
-		case 0x4:
-		case 0x5:
-		case 0x6:
-		case 0x7:
-		case 0x8:
-		break;
-		}
+		case 0:
+			switch(op) {
+				case 0x0:
+					pop();
+					break;
+				case 0x1:
+					push(oper_data);
+					break;
+				case 0x2:
+					push(ip);
+					break;
+				case 0x3:
+					push(sp);
+					break;
+				case 0x4:
+					load();
+					break;
+				case 0x5:
+					store()
+						break;
+				case 0x6:
+					jmp();
+					break;
+				case 0x7:
+					not();
+					break;
+				case 0x8:
+					putc();
+					break;
+				case 0x9:
+					getc();
+					break;
+				case 0xa:
+					halt();
+					break;
+				default:
+					fprintf(stderr, "Why does this value exist? %x \n", op);
+			}
+		case 1:
+			int32_t b = g();
+			int32_t a = g();
+			int32_t result;
+
+			switch(op) {
+				case 0x0:
+					result = add(a, b);
+					break;
+				case 0x1:
+					result = sub(a, b);
+					break;
+				case 0x2:
+					result = mul(a, b);
+					break;
+				case 0x3:
+					result = div(a, b);
+					break;
+				case 0x4:
+					result = and(a, b);
+					break;
+				case 0x5:
+					result = or(a, b);
+					break;
+				case 0x6:
+					result = xor(a, b);
+					break;
+				case 0x7:
+					result = eq(a, b);
+					break;
+				case 0x8:
+					result = lt(a, b);
+					break;
+			}
+			f(result);
 	}
 }
 
@@ -127,7 +240,6 @@ int main (int argc, char*argv[])
 {
 	FILE *fp;
 	int32_t data_size;
-	int32_t *data;
 	int32_t image_size;
 	int ret; /* keep a status variable for return values */
 	unsigned int i;
