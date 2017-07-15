@@ -17,7 +17,8 @@
 static int32_t sp;
 static int32_t ip;
 static int32_t *data;
-static FILE *of;
+
+static FILE *of; /* this is for debug file */
 
 /* no reason to pass three arguments every time */
 struct instruction {
@@ -47,7 +48,6 @@ void f(int32_t v)
 {
 	--sp;
 	data[sp] = v;
-	//printf("f() %x %x\n", sp, data[sp]);
 }
 
 /* return data from array and move stack pointer down */
@@ -55,7 +55,6 @@ int32_t g()
 {
 	int32_t v = data[sp];
 	++sp;
-	//printf("g() %x %x\n", sp, data[sp]);
 	return v;
 }
 
@@ -64,7 +63,6 @@ int32_t g()
  * 7 bit op
  * 24 bit operand
  */
-
 int decode(struct instruction *ins, int32_t data)
 {
 //	printf("data = %x\n", data);
@@ -84,10 +82,10 @@ int decode(struct instruction *ins, int32_t data)
 	return 0;
 }
 
-/* A better name would be more desirable
+/* This might solely exist for debugging?
+ * A better name would be more desirable
  * Covert hex code into desirable 
  * output in simple ascii readable format 
- * this might solely exist for debugging?
  */
 int perform_action(struct instruction ins)
 {
@@ -378,6 +376,7 @@ int operations(struct instruction ins)
 	return 0;
 }
 
+/* debug routine, only meant go generate mask */
 unsigned createMask(unsigned a, unsigned b)
 {
 	unsigned r = 0;
@@ -400,7 +399,7 @@ int main (int argc, char *argv[])
 
 	ip = 0; /* instruction pointer*/
 
-	if(argc < 3 ) {
+	if(argc < 2 ) {
 		fprintf(stderr, "Usage: ./vm.out <taskfile> <outputfile>\n");
 		return 1;
 	}
@@ -443,7 +442,6 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 
-	//while(ip < image_size) {
 	while(1) {
 		struct instruction ins;
 		uint32_t inst = data[ip];
